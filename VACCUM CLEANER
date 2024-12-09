@@ -14,24 +14,26 @@ def initialize_board(n, dirt_positions):
     return board
 
 # Function to print the board with row and column numbers
-def print_board(board, cleaned_positions):
+def print_board(board, cleaned_positions, vacuum_position):
     n = len(board)
     # Print the column numbers
-    print("    " + "   ".join([str(i+1) for i in range(n)]))  # Display column numbers
-    print("   +---" * n + "+")  # Print the top border
-    
+    print("    " + "   ".join([str(i + 1) for i in range(n)]))  # Display column numbers
+    print("   +" + "---+" * n)  # Print the top border
+
     # Print each row with the row number
     for i, row in enumerate(board):
         row_display = []
         for j, cell in enumerate(row):
-            if (i, j) in cleaned_positions:  # Highlight cleaned cells in green
-                row_display.append(colored(cell, 'green'))
+            if [i, j] == vacuum_position:  # Display the vacuum cleaner as 'V'
+                row_display.append(colored('V', 'blue'))
+            elif (i, j) in cleaned_positions:  # Highlight cleaned cells in green
+                row_display.append(colored(' ', 'green'))
             elif cell == 'D':  # Dirty cells are red
                 row_display.append(colored(cell, 'red'))
-            else:  # Empty spaces are normal
+            else:  # Empty spaces or other cells
                 row_display.append(cell)
-        print(f" {i+1} | " + " | ".join(row_display) + " |")
-        print("   +---" * n + "+")  # Print the row border
+        print(f" {i + 1} | " + " | ".join(row_display) + " |")
+        print("   +" + "---+" * n)  # Print the row border
 
 # Function to move the vacuum cleaner based on user input
 def move_vacuum(board, vacuum_position, direction, cleaned_positions):
@@ -47,11 +49,11 @@ def move_vacuum(board, vacuum_position, direction, cleaned_positions):
 
     # Clean the dirt if there's any at the vacuum's position
     if board[vacuum_position[0]][vacuum_position[1]] == 'D':
-        board[vacuum_position[0]][vacuum_position[1]] = 'C'  # Clean the dirt
+        board[vacuum_position[0]][vacuum_position[1]] = ' '  # Replace dirt with an empty space
         cleaned_positions.add((vacuum_position[0], vacuum_position[1]))
-        print(f"Vacuum cleaner has moved to {vacuum_position[0]+1}-{vacuum_position[1]+1}. It was dirty, now it's clean!")
+        print(f"Vacuum cleaner has moved to {vacuum_position[0] + 1}-{vacuum_position[1] + 1}. It was dirty, now it's clean!")
     else:
-        print(f"Vacuum cleaner has moved to {vacuum_position[0]+1}-{vacuum_position[1]+1}. It was already clean.")
+        print(f"Vacuum cleaner has moved to {vacuum_position[0] + 1}-{vacuum_position[1] + 1}. It was already clean.")
 
 # Function to simulate the vacuum cleaner's movement
 def vacuum_cleaner_simulation(n):
@@ -75,12 +77,12 @@ def vacuum_cleaner_simulation(n):
     board = initialize_board(n, dirt_positions)
     
     # Get the initial vacuum position
-    vacuum_position = [random.randint(0, n-1), random.randint(0, n-1)]  # Random starting position
-    print(f"Vacuum cleaner starts at position {vacuum_position[0]+1}-{vacuum_position[1]+1}")
+    vacuum_position = [random.randint(0, n - 1), random.randint(0, n - 1)]  # Random starting position
+    print(f"Vacuum cleaner starts at position {vacuum_position[0] + 1}-{vacuum_position[1] + 1}")
     
     print("Initial Board:")
     cleaned_positions = set()  # To track cleaned positions
-    print_board(board, cleaned_positions)
+    print_board(board, cleaned_positions, vacuum_position)
 
     # Simulate vacuum cleaning
     steps = 0
@@ -94,11 +96,11 @@ def vacuum_cleaner_simulation(n):
         
         move_vacuum(board, vacuum_position, move, cleaned_positions)
         steps += 1
-        print_board(board, cleaned_positions)
+        print_board(board, cleaned_positions, vacuum_position)
 
-        # Check if all cells are clean
-        if all(board[i][j] == 'C' for i in range(n) for j in range(n)):
-            print("All cells are clean!")
+        # Check if all dirty cells are clean
+        if all(board[i][j] != 'D' for i in range(n) for j in range(n)):
+            print("All dirty cells are clean!")
             break
 
 # Start the simulation
