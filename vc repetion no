@@ -26,27 +26,6 @@ def print_board(board, vacuum_position):
         print(f" {i + 1} | " + " | ".join(row_display) + " |")
         print("   +" + "---+" * n)
 
-# Function to find the nearest dirty cell
-def find_nearest_dirty_cell(board, vacuum_position):
-    n = len(board)
-    queue = [(vacuum_position, 0)]  # (position, distance)
-    visited = set()
-    visited.add(tuple(vacuum_position))
-    
-    while queue:
-        (x, y), dist = queue.pop(0)
-        if board[x][y] == 'D':
-            return (x, y)  # Return the coordinates of the nearest dirty cell
-        
-        # Add neighbors to the queue
-        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < n and 0 <= ny < n and (nx, ny) not in visited:
-                visited.add((nx, ny))
-                queue.append(((nx, ny), dist + 1))
-    
-    return None  # No dirty cell found
-
 # Function to simulate the vacuum cleaner's movement
 def vacuum_cleaner_simulation(n):
     # Get the dirt positions from the user
@@ -74,33 +53,29 @@ def vacuum_cleaner_simulation(n):
     print("Initial Board:")
     print_board(board, vacuum_position)
 
+    # Start visiting every cell in a systematic manner (row by row zigzag)
     steps = 0
-    while True:
-        # Find the nearest dirty cell
-        target = find_nearest_dirty_cell(board, vacuum_position)
-        if not target:
-            print("All dirty cells are clean!")
-            break
-        
-        # Move the vacuum cleaner to the target
-        tx, ty = target
-        if tx > vacuum_position[0]:  # Move down
-            vacuum_position[0] += 1
-        elif tx < vacuum_position[0]:  # Move up
-            vacuum_position[0] -= 1
-        elif ty > vacuum_position[1]:  # Move right
-            vacuum_position[1] += 1
-        elif ty < vacuum_position[1]:  # Move left
-            vacuum_position[1] -= 1
-        
-        # Clean the dirt if reached the target
-        if vacuum_position == [tx, ty] and board[tx][ty] == 'D':
-            board[tx][ty] = ' '
-            print(f"Cleaned dirt at position {tx + 1}-{ty + 1}.")
-        
-        steps += 1
-        print(f"\nStep {steps}:")
-        print_board(board, vacuum_position)
+    for i in range(n):
+        if i % 2 == 0:  # Left to right on even rows
+            for j in range(n):
+                vacuum_position = [i, j]
+                if board[i][j] == 'D':
+                    board[i][j] = ' '
+                    print(f"Cleaned dirt at position {i + 1}-{j + 1}.")
+                steps += 1
+                print(f"\nStep {steps}:")
+                print_board(board, vacuum_position)
+        else:  # Right to left on odd rows
+            for j in range(n - 1, -1, -1):
+                vacuum_position = [i, j]
+                if board[i][j] == 'D':
+                    board[i][j] = ' '
+                    print(f"Cleaned dirt at position {i + 1}-{j + 1}.")
+                steps += 1
+                print(f"\nStep {steps}:")
+                print_board(board, vacuum_position)
+
+    print("The vacuum cleaner has visited every cell on the board!")
 
 # Start the simulation
 if __name__ == "__main__":
