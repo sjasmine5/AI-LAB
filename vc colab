@@ -1,0 +1,109 @@
+from termcolor import colored
+import random
+
+# Function to initialize the board with user-defined dirt cells
+def initialize_board(n, dirt_positions):
+    # Initialize an n x n board with empty spaces
+    board = [[' ' for _ in range(n)] for _ in range(n)]
+    
+    # Add dirt ('D') to the board based on the provided dirt positions
+    for x, y in dirt_positions:
+        if 0 <= x < n and 0 <= y < n:
+            board[x][y] = 'D'
+    
+    return board
+
+# Function to print the board with row and column numbers
+def print_board(board, cleaned_positions, vacuum_position):
+    n = len(board)
+    # Print the column numbers
+    print("    " + "   ".join([str(i + 1) for i in range(n)]))  # Display column numbers
+    print("   +" + "---+" * n)  # Print the top border
+
+    # Print each row with the row number
+    for i, row in enumerate(board):
+        row_display = []
+        for j, cell in enumerate(row):
+            if [i, j] == vacuum_position:  # Display the vacuum cleaner as 'V'
+                row_display.append(colored('V', 'blue'))
+            elif (i, j) in cleaned_positions:  # Highlight cleaned cells in green
+                row_display.append(colored(' ', 'green'))
+            elif cell == 'D':  # Dirty cells are red
+                row_display.append(colored(cell, 'red'))
+            else:  # Empty spaces or other cells
+                row_display.append(cell)
+        print(f" {i + 1} | " + " | ".join(row_display) + " |")
+        print("   +" + "---+" * n)  # Print the row border
+
+# Function to move the vacuum cleaner based on user input
+def move_vacuum(board, vacuum_position, direction, cleaned_positions):
+    x, y = vacuum_position
+    if direction == 'up' and x > 0:
+        vacuum_position[0] -= 1
+    elif direction == 'down' and x < len(board) - 1:
+        vacuum_position[0] += 1
+    elif direction == 'left' and y > 0:
+        vacuum_position[1] -= 1
+    elif direction == 'right' and y < len(board[0]) - 1:
+        vacuum_position[1] += 1
+
+    # Clean the dirt if there's any at the vacuum's position
+    if board[vacuum_position[0]][vacuum_position[1]] == 'D':
+        board[vacuum_position[0]][vacuum_position[1]] = ' '  # Replace dirt with an empty space
+        cleaned_positions.add((vacuum_position[0], vacuum_position[1]))
+        print(f"Vacuum cleaner has moved to {vacuum_position[0] + 1}-{vacuum_position[1] + 1}. It was dirty, now it's clean!")
+    else:
+        print(f"Vacuum cleaner has moved to {vacuum_position[0] + 1}-{vacuum_position[1] + 1}. It was already clean.")
+
+# Function to simulate the vacuum cleaner's movement
+def vacuum_cleaner_simulation(n):
+    # Get the dirt positions from the user
+    dirt_positions = []
+    print(f"Enter the coordinates for the dirt positions (1-{n} for both row and column).")
+    while True:
+        try:
+            dirt_input = input("Enter dirt position as 'row col' or type 'done' to finish: ")
+            if dirt_input.lower() == 'done':
+                break
+            row, col = map(int, dirt_input.split())
+            if 1 <= row <= n and 1 <= col <= n:
+                dirt_positions.append((row - 1, col - 1))  # Convert to 0-indexed
+            else:
+                print(f"Invalid input. Please enter values between 1 and {n}.")
+        except ValueError:
+            print("Invalid input. Please enter the dirt position as 'row col'.")
+    
+    # Initialize the board with the given dirt positions
+    board = initialize_board(n, dirt_positions)
+    
+    # Get the initial vacuum position
+    vacuum_position = [random.randint(0, n - 1), random.randint(0, n - 1)]  # Random starting position
+    print(f"Vacuum cleaner starts at position {vacuum_position[0] + 1}-{vacuum_position[1] + 1}")
+    
+    print("Initial Board:")
+    cleaned_positions = set()  # To track cleaned positions
+    print_board(board, cleaned_positions, vacuum_position)
+
+    # Simulate vacuum cleaning
+    steps = 0
+    while True:
+        print(f"\nStep {steps + 1}:")
+        move = input("Enter direction for vacuum cleaner (up, down, left, right): ").lower()
+        
+        if move not in ['up', 'down', 'left', 'right']:
+            print("Invalid direction! Please enter 'up', 'down', 'left', or 'right'.")
+            continue
+        
+        move_vacuum(board, vacuum_position, move, cleaned_positions)
+        steps += 1
+        print_board(board, cleaned_positions, vacuum_position)
+
+        # Check if all dirty cells are clean
+        if all(board[i][j] != 'D' for i in range(n) for j in range(n)):
+            print("All dirty cells are clean!")
+            break
+
+# Start the simulation
+if __name__ == "__main__":
+    n = int(input("Enter the size of the board (n x n): "))
+    vacuum_cleaner_simulation(n)
