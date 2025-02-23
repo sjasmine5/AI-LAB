@@ -1,0 +1,71 @@
+import random
+import time
+from IPython.display import display, HTML, clear_output
+
+N = 8  # Number of queens
+
+def random_board():
+    """Generate a random board configuration where each queen is in a random row."""
+    return [random.randint(0, N-1) for _ in range(N)]
+
+def heuristic(board):
+    """Calculate the number of attacking queen pairs."""
+    attacks = 0
+    for i in range(N):
+        for j in range(i + 1, N):
+            if board[i] == board[j] or abs(board[i] - board[j]) == abs(i - j):
+                attacks += 1
+    return attacks
+
+def get_neighbors(board):
+    """Generate neighboring states by moving each queen within its column."""
+    neighbors = []
+    for col in range(N):
+        for row in range(N):
+            if board[col] != row:
+                new_board = board[:]
+                new_board[col] = row
+                neighbors.append(new_board)
+    return neighbors
+
+def hill_climbing():
+    """Solve the 8-Queens problem using Hill Climbing with a heuristic function."""
+    board = random_board()
+    step = 0
+
+    while True:
+        display_board(board, step, f"Current heuristic: {heuristic(board)}")
+        if heuristic(board) == 0:  # Solution found
+            return board
+        
+        neighbors = get_neighbors(board)
+        best_neighbor = min(neighbors, key=heuristic)
+        
+        if heuristic(best_neighbor) >= heuristic(board):  # Local minimum
+            return None
+        
+        board = best_neighbor
+        step += 1
+        time.sleep(1)  # Pause for visualization
+
+def display_board(board, step, commentary):
+    """Display the board visually in the notebook."""
+    board_html = "<table style='border-collapse: collapse;'>"
+    for r in range(N):
+        board_html += "<tr>"
+        for c in range(N):
+            if board[c] == r:
+                board_html += "<td style='width: 40px; height: 40px; background-color: black; color: white; text-align: center;'>Q</td>"
+            else:
+                board_html += "<td style='width: 40px; height: 40px; background-color: white; border: 1px solid black;'>&nbsp;</td>"
+        board_html += "</tr>"
+    board_html += "</table>"
+    clear_output(wait=True)
+    display(HTML(f"<h3>Step {step}</h3>{board_html}<div>{commentary}</div>"))
+
+if __name__ == "__main__":
+    solution = hill_climbing()
+    if solution:
+        print("Solution found:", solution)
+    else:
+        print("Stuck in local minimum, restarting...")
