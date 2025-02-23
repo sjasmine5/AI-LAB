@@ -1,0 +1,96 @@
+import random
+import heapq
+import time
+from IPython.display import display, HTML, clear_output
+
+GOAL_STATE = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+
+def is_solvable(state):
+    flat_state = [num for row in state for num in row if num != 0]
+    inversions = sum(a > b for i, a in enumerate(flat_state) for b in flat_state[i+1:])
+    return inversions % 2 == 0
+
+def shuffle_state(empty_pos):
+    while True:
+        numbers = list(range(1, 9)) + [0]
+        random.shuffle(numbers)
+        state = [numbers[i:i+3] for i in range(0, 9, 3)]
+        if is_solvable(state):
+            blank_row, blank_col = divmod(numbers.index(0), 3)
+            target_row, target_col = divmod(empty_pos - 1, 3)
+            state[blank_row][blank_col], state[target_row][target_col] = state[target_row][target_col], state[blank_row][blank_col]
+            return state
+
+def find_blank(state):
+    for i, row in enumerate(state):
+        if 0 in row:
+            return i, row.index(0)
+
+def generate_successors(state):
+    blank_x, blank_y = find_blank(state)
+    moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    successors = []
+    for dx, dy in moves:
+        nx, ny = blank_x + dx, blank_y + dy
+        if 0 <= nx < 3 and 0 <= ny < 3:
+            new_state = [row[:] for row in state]
+            new_state[blank_x][blank_y], new_state[nx][ny] = new_state[nx][ny], new_state[blank_x][blank_y]
+            successors.append(new_state)
+    return successors
+
+def heuristic(state):
+    return sum(abs(i - x) + abs(j - y)
+               for i, row in enumerate(state)
+               for j, val in enumerate(row) if val != 0
+               for x, y in [(divmod(val - 1, 3))])
+
+def display_grid(state, step, commentary):
+    grid_html = "<table style='border-collapse: collapse; text-align: center;'>"
+    for row in state:
+        grid_html += "<tr>" + "".join(
+            f"<td style='width: 50px; height: 50px; color: white; background-color: black; border: 1px solid white; font-size: 20px;'>{cell or '&nbsp;'}</td>"
+            for cell in row) + "</tr>"
+    grid_html += "</table>"
+    clear_output(wait=True)
+    display(HTML(f"<h3 style='color: white;'>Step {step}</h3>{grid_html}<div style='color: white;'>{commentary}</div>"))
+    time.sleep(1)
+
+def a_star(start_state):
+    start_tuple = tuple(map(tuple, start_state))
+    goal_tuple = tuple(map(tuple, GOAL_STATE))
+    priority_queue = [(0, start_tuple)]
+    g_cost, parent_map = {start_tuple: 0}, {start_tuple: None}
+    while priority_queue:
+        _, current = heapq.heappop(priority_queue)
+        if current == goal_tuple:
+            path, node = [], current
+            while node:
+                path.append([list(row) for row in node])
+                node = parent_map[node]
+            return path[::-1]
+        for neighbor in generate_successors([list(row) for row in current]):
+            neighbor_tuple = tuple(map(tuple, neighbor))
+            new_cost = g_cost[current] + 1
+            if neighbor_tuple not in g_cost or new_cost < g_cost[neighbor_tuple]:
+                g_cost[neighbor_tuple] = new_cost
+                heapq.heappush(priority_queue, (new_cost + heuristic(neighbor), neighbor_tuple))
+                parent_map[neighbor_tuple] = current
+    return None
+
+if __name__ == "__main__":
+    empty_pos = int(input("Enter the position of the empty cell (1-9): "))
+    if not 1 <= empty_pos <= 9:
+        print("Invalid position!")
+    else:
+        initial_state = shuffle_state(empty_pos)
+        print("Initial State:")
+        for row in initial_state:
+            print(row)
+
+        solution = a_star(initial_state)
+        if solution:
+            for step, state in enumerate(solution):
+                commentary = "Initial state" if step == 0 else "Goal state reached!" if step == len(solution) - 1 else "Progressing..."
+                display_grid(state, step, commentary)
+        else:
+            print("No solution found.")
