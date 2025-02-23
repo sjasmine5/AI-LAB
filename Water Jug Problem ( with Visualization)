@@ -1,0 +1,113 @@
+import time
+from IPython.display import display, HTML, clear_output
+from collections import deque
+
+def visualize_jugs(state, step, capacities, commentary):
+    """Visualize the jugs' current state."""
+    x, y = state
+    jug_x_capacity, jug_y_capacity = capacities
+
+    # Scale the jug heights for visualization
+    jug_x_height = int((x / jug_x_capacity) * 200) if jug_x_capacity > 0 else 0
+    jug_y_height = int((y / jug_y_capacity) * 200) if jug_y_capacity > 0 else 0
+
+    # Create the visualization
+    html = f"""
+    <div style="display: flex; align-items: center;">
+        <div style="border: 2px solid black; width: 100px; height: 200px; position: relative; margin-right: 20px;">
+            <div style="background-color: blue; width: 100%; height: {jug_x_height}px; position: absolute; bottom: 0;"></div>
+            <div style="position: absolute; bottom: 0; width: 100%; text-align: center; color: black;">
+                {x}/{jug_x_capacity}
+            </div>
+        </div>
+        <div style="border: 2px solid black; width: 100px; height: 200px; position: relative; margin-right: 20px;">
+            <div style="background-color: blue; width: 100%; height: {jug_y_height}px; position: absolute; bottom: 0;"></div>
+            <div style="position: absolute; bottom: 0; width: 100%; text-align: center; color: black;">
+                {y}/{jug_y_capacity}
+            </div>
+        </div>
+        <div style="margin-left: 20px;">
+            <p>{'<br>'.join(commentary)}</p>
+        </div>
+    </div>
+    """
+    clear_output(wait=True)
+    display(HTML(html))
+    time.sleep(2)
+
+def generate_commentary(prev_state, current_state, capacities):
+    """Generate commentary based on state transitions."""
+    if not prev_state:
+        return ["Initial state: Both jugs are empty."]
+    x, y = current_state
+    px, py = prev_state
+    jug_x_capacity, jug_y_capacity = capacities
+
+    if x > px:
+        return [f"Filled Jug X to {jug_x_capacity} liters."]
+    elif y > py:
+        return [f"Filled Jug Y to {jug_y_capacity} liters."]
+    elif x < px:
+        return ["Emptied Jug X."]
+    elif y < py:
+        return ["Emptied Jug Y."]
+    elif x + y > px + py:
+        return ["Transferred water from Jug X to Jug Y."]
+    else:
+        return ["Transferred water from Jug Y to Jug X."]
+
+def water_jug_solver(jug_x_capacity, jug_y_capacity, target):
+    capacities = (jug_x_capacity, jug_y_capacity)
+    queue = deque([(0, 0)])  # Start with both jugs empty
+    visited = set()
+    backtrack = {}
+
+    while queue:
+        state = queue.popleft()
+        x, y = state
+
+        # Check if the goal is reached
+        if x == target or y == target:
+            solution = []
+            while state in backtrack:
+                solution.append(state)
+                state = backtrack[state]
+            solution.append((0, 0))
+            solution.reverse()
+
+            # Visualize the solution path
+            print("Visualizing the solution path...\n")
+            for step, current_state in enumerate(solution, start=1):
+                prev_state = backtrack.get(current_state)
+                commentary = generate_commentary(prev_state, current_state, capacities)
+                visualize_jugs(current_state, step, capacities, commentary)
+            print("\nSolution Found!")
+            return solution
+
+        visited.add(state)
+
+        # Generate possible transitions
+        transitions = [
+            (jug_x_capacity, y),  # Fill Jug X
+            (x, jug_y_capacity),  # Fill Jug Y
+            (0, y),              # Empty Jug X
+            (x, 0),              # Empty Jug Y
+            (x - min(x, jug_y_capacity - y), y + min(x, jug_y_capacity - y)),  # Pour X -> Y
+            (x + min(y, jug_x_capacity - x), y - min(y, jug_x_capacity - x))   # Pour Y -> X
+        ]
+
+        for next_state in transitions:
+            if next_state not in visited:
+                queue.append(next_state)
+                backtrack[next_state] = state
+
+    print("No solution exists.")
+    return None
+
+# Input
+jug_x = int(input("Enter capacity of Jug X: "))
+jug_y = int(input("Enter capacity of Jug Y: "))
+target = int(input("Enter the target amount of water: "))
+
+# Run the solver
+solution_path = water_jug_solver(jug_x, jug_y, target)
