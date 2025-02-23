@@ -1,0 +1,37 @@
+from collections import deque
+
+def find_shortest_path_bfs(graph_data, start_node, goal_node):
+    search_queue = deque([(start_node, [start_node])])
+
+    while search_queue:
+        current_node, current_path = search_queue.popleft()
+
+        if current_node == goal_node:
+            return current_path  # Return the shortest path
+
+        for adjacent in graph_data[current_node] if current_node in graph_data else []:
+            search_queue.append((adjacent, current_path + [adjacent]))
+
+    return None  # If no path exists
+
+# Taking input for the graph
+graph_dict = {}
+num_edges = int(input("How many edges does the graph have? "))
+
+for _ in range(num_edges):
+    node1, node2 = map(int, input("Enter edge (from to): ").split())
+    
+    if node1 not in graph_dict:
+        graph_dict[node1] = []
+    graph_dict[node1].append(node2)
+
+# Taking start and goal node
+start_node = int(input("Enter the start node: "))
+goal_node = int(input("Enter the target node: "))
+
+# Running BFS search
+shortest_path = find_shortest_path_bfs(graph_dict, start_node, goal_node)
+if shortest_path:
+    print("Found the shortest path:", shortest_path)
+else:
+    print("No valid path exists between the nodes.")
