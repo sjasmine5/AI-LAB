@@ -40,8 +40,9 @@ def display_grid(step, n):
     for i in range(n):
         grid_html += "<tr>"
         for j in range(n):
-            color = "#f0d9b5" if (i + j) % 2 == 0 else "#b58863"  # Chessboard colors
-            content = "&#9813;" if step[i][j] == 1 else "&nbsp;"  # Queen symbol
+            color = "#ffffff" if (i + j) % 2 == 0 else "#000000"  # Black and white colors
+            text_color = "#ffffff" if color == "#000000" else "#000000"  # Contrast text color
+            content = f"<span style='color: {text_color};'>&#9813;</span>" if step[i][j] == 1 else "&nbsp;"  # Queen symbol
             grid_html += f"<td style='width: 50px; height: 50px; background-color: {color}; border: 1px solid black;'>{content}</td>"
         grid_html += "</tr>"
     grid_html += "</table>"
