@@ -1,0 +1,37 @@
+import heapq
+
+def lowest_cost_search(graph, start_node, goal_node):
+    priority_queue = [(0, start_node)]  # (cost, node)
+    visited_nodes = set()
+
+    while True:
+        if not priority_queue:  # If queue is empty, no path exists
+            return float("inf")
+
+        current_cost, current_node = heapq.heappop(priority_queue)
+
+        if current_node in visited_nodes:
+            continue
+
+        visited_nodes.add(current_node)
+
+        if current_node == goal_node:
+            return current_cost  # Return the lowest cost to reach goal
+
+        for neighbor, edge_cost in graph[current_node] if current_node in graph else []:
+            if neighbor not in visited_nodes:
+                heapq.heappush(priority_queue, (current_cost + edge_cost, neighbor))
+
+# Example Graph: {node: [(neighbor, cost), ...]}
+graph_data = {
+    'A': [('B', 1), ('C', 4)],
+    'B': [('D', 2), ('E', 5)],
+    'C': [('F', 3)],
+    'D': [('G', 2)],
+    'E': [('G', 1)],
+    'F': [('G', 6)],
+    'G': []
+}
+
+start_node, goal_node = 'A', 'G'
+print("Lowest Cost:", lowest_cost_search(graph_data, start_node, goal_node))
