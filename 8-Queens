@@ -1,0 +1,67 @@
+import time
+from IPython.display import display, HTML, clear_output
+
+def is_safe(board, row, col, n):
+    """Check if placing a queen at (row, col) is safe."""
+    for i in range(col):
+        if board[row][i] == 1:
+            return False
+
+    for i, j in zip(range(row, -1, -1), range(col, -1, -1)):
+        if board[i][j] == 1:
+            return False
+
+    for i, j in zip(range(row, n), range(col, -1, -1)):
+        if board[i][j] == 1:
+            return False
+
+    return True
+
+def solve_n_queens(board, col, n, steps):
+    """Use backtracking to solve the N-Queens problem and save steps."""
+    if col >= n:
+        steps.append([row[:] for row in board])  # Save the current solution step
+        return True
+
+    for i in range(n):
+        if is_safe(board, i, col, n):
+            board[i][col] = 1
+            steps.append([row[:] for row in board])  # Save the current step
+            if solve_n_queens(board, col + 1, n, steps):
+                return True
+            board[i][col] = 0  # Backtrack
+            steps.append([row[:] for row in board])  # Save the backtracked step
+
+    return False
+
+def display_grid(step, n):
+    """Generate HTML for the current chessboard state."""
+    grid_html = "<table style='border-collapse: collapse; text-align: center;'>"
+    for i in range(n):
+        grid_html += "<tr>"
+        for j in range(n):
+            color = "#f0d9b5" if (i + j) % 2 == 0 else "#b58863"  # Chessboard colors
+            content = "&#9813;" if step[i][j] == 1 else "&nbsp;"  # Queen symbol
+            grid_html += f"<td style='width: 50px; height: 50px; background-color: {color}; border: 1px solid black;'>{content}</td>"
+        grid_html += "</tr>"
+    grid_html += "</table>"
+    return grid_html
+
+def animate_n_queens(n):
+    """Solve the N-Queens problem and display animation in Colab."""
+    board = [[0 for _ in range(n)] for _ in range(n)]
+    steps = []
+    solve_n_queens(board, 0, n, steps)
+
+    for idx, step in enumerate(steps):
+        clear_output(wait=True)
+        html_content = f"""
+        <h3>Step {idx + 1}/{len(steps)}</h3>
+        {display_grid(step, n)}
+        """
+        display(HTML(html_content))
+        time.sleep(0.5)  # Reduced sleep time for faster animation
+
+# Run the N-Queens animation for 8x8 board
+n = 8  # Chessboard size is fixed to 8
+animate_n_queens(n)
